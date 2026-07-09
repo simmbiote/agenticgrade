@@ -13,12 +13,14 @@ Teams adopting agentic coding tools (Claude Code, Cursor, etc.) get wildly incon
 ## Capabilities
 
 ### New Capabilities
+
 - `provider-detection`: Determines which agentic-tooling provider(s) a repo uses — `openspec` (an `openspec/` directory), `claude` (`CLAUDE.md`/`.claude/`), `universal` (a generic `AGENTS.md` with no specific-tool signal), or `none` (no signal at all) — and exposes that set to metrics and scoring.
 - `readiness-metrics`: Defines the six scoring categories (Documentation, Architecture, Testing, Automation Guard Rails, AI Context, Maintainability), each with ~7-10 base metrics and point values (e.g., README sections, ADR index, CI test execution, AGENTS.md/CLAUDE.md coverage, conventional-commit adoption) — plus provider-scoped metrics that only apply when their tagged provider is in the detected set.
 - `readiness-scoring`: Aggregates applicable metric results (base + provider-scoped) into category scores and an overall score, maps the overall percentage to a letter grade (A+ to F), and reports which provider(s) were detected.
 - `readiness-cli`: Command-line entry point that runs the scanner + scoring engine against a target repo path and renders a human-readable report (detected providers, per-category scores, overall grade).
 
 ### Modified Capabilities
+
 (none — this is a new project)
 
 ## Impact

@@ -5,12 +5,14 @@
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Define a metrics catalog covering Documentation, Architecture, Testing, Automation Guard Rails, AI Context, and Maintainability, each metric carrying a point value and a concrete detection rule.
 - Compute a per-category score and an overall score (points earned / max possible points).
 - Map the overall percentage to a letter grade (A+ through F).
 - Provide a CLI that runs the scan against a local repo path and prints a readable report.
 
 **Non-Goals:**
+
 - No auto-remediation — the tool reports gaps, it doesn't fix them.
 - No deep static/AST analysis of code quality — checks are file-existence and lightweight content-pattern based (e.g., "does README have a Setup section"), not semantic code review.
 - No CI integration, web dashboard, or historical trend tracking in this PoC — read one repo, print one report.
@@ -40,7 +42,7 @@
    `openspec` and `claude` are each detected purely from their own filesystem signal (`openspec/` dir; `CLAUDE.md`/`.claude/`) and can co-occur in the same scan. `universal` only applies when `AGENTS.md` is present and neither specific provider was detected; `none` only applies when nothing was detected at all. Alternative — a single fixed precedence order (e.g., always prefer `openspec` over `claude`) — rejected because a repo can legitimately use both Claude and OpenSpec conventions at once, and picking one would silently drop applicable metrics for the other.
 
 8. **Provider-scoped metrics are cross-cutting and change the max score, not just the AI Context category.**
-   A metric may carry an optional `provider` tag; untagged metrics always apply, tagged metrics only apply (count toward earned *and* max) when their provider is in the detected set. This means the overall max score is repo-specific rather than a fixed constant. Alternative — keep a fixed universal max and only vary earned score — rejected because it would unfairly penalize repos whose provider unlocks fewer bonus metrics, and would let provider-scoped metrics leak into categories where they don't apply as unearned "missing" points.
+   A metric may carry an optional `provider` tag; untagged metrics always apply, tagged metrics only apply (count toward earned _and_ max) when their provider is in the detected set. This means the overall max score is repo-specific rather than a fixed constant. Alternative — keep a fixed universal max and only vary earned score — rejected because it would unfairly penalize repos whose provider unlocks fewer bonus metrics, and would let provider-scoped metrics leak into categories where they don't apply as unearned "missing" points.
 
 9. **A small git-log reader sits alongside the filesystem walker.**
    Most metrics only need the file tree, but a few (`conventional commits used recently`, `docs updated recently`) need commit history — recent commit subject lines and last-touched dates for specific paths. Rather than growing the walker to understand git, this change adds a narrow git-log adapter (`git log --oneline -20`, `git log -1 --format=%ct -- <path>`) that these specific checks call directly. Alternative — skip git-derived metrics for v1 — rejected because they were explicitly requested in the metrics list and are cheap to implement as a thin adapter.
@@ -54,7 +56,7 @@
 - **Point values are inherently opinionated** → Mitigation: keep the metrics catalog as an isolated, well-documented data structure so values can be tuned without touching scoring/CLI code.
 - **Non-standard repo conventions cause false negatives** (e.g., docs live in an external wiki) → Mitigation: document this as a known limitation; v1 scope is explicitly repo-local signals only.
 - **Unbounded directory walks on huge repos could be slow** → Mitigation: skip default-ignored directories; cap walk depth if needed after profiling.
-- **Repo-specific max scores make cross-repo grade comparisons misleading** (an `openspec` repo has more applicable points than a `none` repo, so a raw score comparison isn't apples-to-apples) → Mitigation: the letter grade is always a percentage of *that repo's own* applicable max, so grades stay comparable even though raw point totals don't; the CLI report always shows detected provider(s) alongside the grade for context.
+- **Repo-specific max scores make cross-repo grade comparisons misleading** (an `openspec` repo has more applicable points than a `none` repo, so a raw score comparison isn't apples-to-apples) → Mitigation: the letter grade is always a percentage of _that repo's own_ applicable max, so grades stay comparable even though raw point totals don't; the CLI report always shows detected provider(s) alongside the grade for context.
 
 ## Migration Plan
 
