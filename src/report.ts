@@ -25,6 +25,7 @@ function gradeColor(grade: string): (input: string | number) => string {
 
 export interface RenderReportOptions {
   summary?: boolean;
+  detailed?: boolean;
 }
 
 export function renderReport(result: ScoringResult, options: RenderReportOptions = {}): string {
@@ -42,7 +43,7 @@ export function renderReport(result: ScoringResult, options: RenderReportOptions
     for (const improvement of result.topImprovements) {
       lines.push(
         pc.red(
-          `  - ${improvement.description} [${CATEGORY_LABELS[improvement.category]}] (+${improvement.points} pts)`,
+          `  - ${improvement.instruction} [${CATEGORY_LABELS[improvement.category]}] (+${improvement.points} pts)`,
         ),
       );
     }
@@ -71,6 +72,9 @@ export function renderReport(result: ScoringResult, options: RenderReportOptions
         lines.push(
           `  ${mark} ${metric.description} (${metric.earned}/${metric.points})${providerTag}`,
         );
+        if (options.detailed && !metric.passed) {
+          lines.push(`      ${pc.dim(metric.remediation)}`);
+        }
       }
     }
     lines.push('');

@@ -9,6 +9,9 @@ The scan also detects which agentic-tooling provider convention a repo uses
 (`openspec`, `claude`, a generic `AGENTS.md`-based `universal` setup, or `none`)
 and applies provider-specific bonus metrics on top of the base catalog.
 
+See [docs/METRICS.md](docs/METRICS.md) for the full metric reference — every metric's
+description, fix instruction, and remediation explanation in one table.
+
 ## Setup
 
 ```bash
@@ -19,12 +22,15 @@ npm run build
 ## Run
 
 ```bash
-npx agentlint scan [path]            # human-readable report, defaults to the current directory
-npx agentlint scan [path] --json     # structured JSON output
-npx agentlint scan [path] --summary  # condensed report: overall, top improvements, providers, category totals — no per-metric detail
+npx agentlint scan [path]             # human-readable report, defaults to the current directory
+npx agentlint scan [path] --json      # structured JSON output
+npx agentlint scan [path] --summary   # condensed report: overall, top improvements, providers, category totals — no per-metric detail
+npx agentlint scan [path] --detailed  # expanded report: each failing metric is followed by a remediation explanation
 ```
 
 `--summary` can be combined with `--json` to trim the JSON output the same way: each entry in `categories` omits its `metrics` array.
+
+`--detailed` can be combined with `--json` to add a `remediation` field to each metric result; without `--detailed`, JSON metric results have no `remediation` field. `--detailed` has no effect when `--summary` is also set, since `--summary` already omits per-metric output entirely.
 
 During development, run directly against source without building:
 

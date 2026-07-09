@@ -96,6 +96,27 @@ describe('CLI', () => {
     expect(parsed.overall.grade).toBeDefined();
   });
 
+  it('omits remediation from JSON metric results by default', () => {
+    fixture = createFixture({ 'AGENTS.md': '## Setup\nx\n## Conventions\nx\n## Testing\nx' });
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    main(['scan', fixture.root, '--json']);
+    const parsed = JSON.parse(logSpy.mock.calls[0][0] as string);
+
+    expect(parsed.categories[0].metrics[0].remediation).toBeUndefined();
+  });
+
+  it('includes remediation in JSON metric results with --json --detailed', () => {
+    fixture = createFixture({ 'AGENTS.md': '## Setup\nx\n## Conventions\nx\n## Testing\nx' });
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    main(['scan', fixture.root, '--json', '--detailed']);
+    const parsed = JSON.parse(logSpy.mock.calls[0][0] as string);
+
+    expect(typeof parsed.categories[0].metrics[0].remediation).toBe('string');
+    expect(parsed.categories[0].metrics[0].remediation.length).toBeGreaterThan(0);
+  });
+
   it('exits 0 even when the resulting grade is F', () => {
     fixture = createFixture({});
     vi.spyOn(console, 'log').mockImplementation(() => {});

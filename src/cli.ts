@@ -8,12 +8,14 @@ interface ParsedArgs {
   targetPath: string;
   json: boolean;
   summary: boolean;
+  detailed: boolean;
 }
 
 export function parseArgs(argv: string[]): ParsedArgs {
   let targetPath = process.cwd();
   let json = false;
   let summary = false;
+  let detailed = false;
   let pathGiven = false;
 
   for (const arg of argv) {
@@ -21,24 +23,26 @@ export function parseArgs(argv: string[]): ParsedArgs {
       json = true;
     } else if (arg === '--summary') {
       summary = true;
+    } else if (arg === '--detailed') {
+      detailed = true;
     } else if (!pathGiven) {
       targetPath = arg;
       pathGiven = true;
     }
   }
 
-  return { targetPath, json, summary };
+  return { targetPath, json, summary, detailed };
 }
 
 export function main(argv: string[]): number {
   if (argv[0] !== 'scan') {
     console.error(
-      'Error: missing required "scan" subcommand. Usage: agentlint scan [path] [--json] [--summary]',
+      'Error: missing required "scan" subcommand. Usage: agentlint scan [path] [--json] [--summary] [--detailed]',
     );
     return 1;
   }
 
-  const { targetPath, json, summary } = parseArgs(argv.slice(1));
+  const { targetPath, json, summary, detailed } = parseArgs(argv.slice(1));
   const resolved = path.resolve(targetPath);
 
   if (!existsSync(resolved) || !statSync(resolved).isDirectory()) {
@@ -48,12 +52,24 @@ export function main(argv: string[]): number {
 
   const result = runScan(resolved);
   if (json) {
-    const output = summary
-      ? { ...result, categories: result.categories.map(({ metrics: _metrics, ...rest }) => rest) }
-      : result;
+    let output: unknown = result;
+    if (summary) {
+      output = {
+        ...result,
+        categories: result.categories.map(({ metrics: _metrics, ...rest }) => rest),
+      };
+    } else if (!detailed) {
+      output = {
+        ...result,
+        categories: result.categories.map((c) => ({
+          ...c,
+          metrics: c.metrics.map(({ remediation: _remediation, ...rest }) => rest),
+        })),
+      };
+    }
     console.log(JSON.stringify(output, null, 2));
   } else {
-    console.log(renderReport(result, { summary }));
+    console.log(renderReport(result, { summary, detailed }));
   }
   return 0;
 }

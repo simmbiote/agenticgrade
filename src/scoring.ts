@@ -7,6 +7,8 @@ export interface MetricResult {
   id: string;
   category: Category;
   description: string;
+  instruction: string;
+  remediation: string;
   points: number;
   earned: number;
   passed: boolean;
@@ -21,7 +23,7 @@ export interface CategoryScore {
   metrics: MetricResult[];
 }
 
-export type TopImprovement = Pick<MetricResult, 'id' | 'category' | 'description' | 'points'>;
+export type TopImprovement = Pick<MetricResult, 'id' | 'category' | 'instruction' | 'points'>;
 
 export interface ScoringResult {
   providers: ProviderId[];
@@ -72,6 +74,8 @@ export function scoreRepo(ctx: ScanContext, metrics: Metric[]): ScoringResult {
         id: m.id,
         category: m.category,
         description: m.description,
+        instruction: m.instruction,
+        remediation: m.remediation,
         points: m.points,
         earned: passed ? m.points : 0,
         passed,
@@ -93,7 +97,7 @@ export function scoreRepo(ctx: ScanContext, metrics: Metric[]): ScoringResult {
     .filter((m) => !m.passed)
     .sort((a, b) => b.points - a.points)
     .slice(0, 5)
-    .map(({ id, category, description, points }) => ({ id, category, description, points }));
+    .map(({ id, category, instruction, points }) => ({ id, category, instruction, points }));
 
   return {
     providers: Array.from(ctx.providers),

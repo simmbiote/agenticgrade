@@ -14,6 +14,8 @@ export interface Metric {
   id: string;
   category: Category;
   description: string;
+  instruction: string;
+  remediation: string;
   points: number;
   provider?: MetricProvider;
   check: (ctx: ScanContext) => boolean;

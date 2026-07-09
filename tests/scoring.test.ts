@@ -26,6 +26,8 @@ describe('isMetricApplicable', () => {
     id: 'x',
     category: 'documentation',
     description: 'x',
+    instruction: 'x',
+    remediation: 'x',
     points: 10,
     check: () => true,
   };
@@ -42,6 +44,15 @@ describe('isMetricApplicable', () => {
   });
 });
 
+function metric(overrides: Partial<Metric> & Pick<Metric, 'id' | 'category' | 'points' | 'check'>): Metric {
+  return {
+    description: overrides.id,
+    instruction: overrides.id,
+    remediation: overrides.id,
+    ...overrides,
+  };
+}
+
 describe('scoreRepo', () => {
   let fixture: Fixture | undefined;
 
@@ -55,24 +66,22 @@ describe('scoreRepo', () => {
     const ctx = createScanContext(fixture.root, new Set(['claude']));
 
     const metrics: Metric[] = [
-      { id: 'a', category: 'documentation', description: 'a', points: 10, check: () => true },
-      { id: 'b', category: 'documentation', description: 'b', points: 15, check: () => false },
-      {
+      metric({ id: 'a', category: 'documentation', points: 10, check: () => true }),
+      metric({ id: 'b', category: 'documentation', points: 15, check: () => false }),
+      metric({
         id: 'c',
         category: 'documentation',
-        description: 'c',
         points: 10,
         provider: 'claude',
         check: () => true,
-      },
-      {
+      }),
+      metric({
         id: 'd',
         category: 'documentation',
-        description: 'd',
         points: 10,
         provider: 'openspec',
         check: () => true,
-      },
+      }),
     ];
 
     const result = scoreRepo(ctx, metrics);
@@ -87,9 +96,7 @@ describe('scoreRepo', () => {
   it('reports a category percentage of 0 when the category has no applicable metrics', () => {
     fixture = createFixture({});
     const ctx = createScanContext(fixture.root, new Set(['none']));
-    const metrics: Metric[] = [
-      { id: 'a', category: 'testing', description: 'a', points: 10, check: () => true },
-    ];
+    const metrics: Metric[] = [metric({ id: 'a', category: 'testing', points: 10, check: () => true })];
 
     const result = scoreRepo(ctx, metrics);
     const doc = result.categories.find((c) => c.category === 'documentation')!;
@@ -102,8 +109,8 @@ describe('scoreRepo', () => {
     fixture = createFixture({});
     const ctx = createScanContext(fixture.root, new Set(['none']));
     const metrics: Metric[] = [
-      { id: 'a', category: 'documentation', description: 'a', points: 10, check: () => true },
-      { id: 'b', category: 'testing', description: 'b', points: 20, check: () => false },
+      metric({ id: 'a', category: 'documentation', points: 10, check: () => true }),
+      metric({ id: 'b', category: 'testing', points: 20, check: () => false }),
     ];
 
     const result = scoreRepo(ctx, metrics);
@@ -118,27 +125,29 @@ describe('scoreRepo', () => {
     fixture = createFixture({});
     const ctx = createScanContext(fixture.root, new Set(['none']));
     const metrics: Metric[] = [
-      { id: 'a', category: 'documentation', description: 'a', points: 5, check: () => false },
-      { id: 'b', category: 'documentation', description: 'b', points: 20, check: () => false },
-      { id: 'c', category: 'testing', description: 'c', points: 15, check: () => false },
-      { id: 'd', category: 'testing', description: 'd', points: 10, check: () => false },
-      { id: 'e', category: 'architecture', description: 'e', points: 25, check: () => false },
-      { id: 'f', category: 'architecture', description: 'f', points: 1, check: () => false },
-      { id: 'g', category: 'maintainability', description: 'g', points: 30, check: () => true },
+      metric({ id: 'a', category: 'documentation', points: 5, check: () => false }),
+      metric({ id: 'b', category: 'documentation', points: 20, check: () => false }),
+      metric({ id: 'c', category: 'testing', points: 15, check: () => false }),
+      metric({ id: 'd', category: 'testing', points: 10, check: () => false }),
+      metric({ id: 'e', category: 'architecture', points: 25, check: () => false }),
+      metric({ id: 'f', category: 'architecture', points: 1, check: () => false }),
+      metric({ id: 'g', category: 'maintainability', points: 30, check: () => true }),
     ];
 
     const result = scoreRepo(ctx, metrics);
 
     expect(result.topImprovements.map((m) => m.id)).toEqual(['e', 'b', 'c', 'd', 'a']);
+    expect(result.topImprovements.every((m) => 'instruction' in m)).toBe(true);
+    expect(result.topImprovements.every((m) => !('description' in m))).toBe(true);
   });
 
   it('includes all failing metrics when fewer than 5 fail', () => {
     fixture = createFixture({});
     const ctx = createScanContext(fixture.root, new Set(['none']));
     const metrics: Metric[] = [
-      { id: 'a', category: 'documentation', description: 'a', points: 10, check: () => false },
-      { id: 'b', category: 'testing', description: 'b', points: 20, check: () => false },
-      { id: 'c', category: 'architecture', description: 'c', points: 5, check: () => true },
+      metric({ id: 'a', category: 'documentation', points: 10, check: () => false }),
+      metric({ id: 'b', category: 'testing', points: 20, check: () => false }),
+      metric({ id: 'c', category: 'architecture', points: 5, check: () => true }),
     ];
 
     const result = scoreRepo(ctx, metrics);
@@ -149,9 +158,7 @@ describe('scoreRepo', () => {
   it('reports an empty topImprovements list when every metric passes', () => {
     fixture = createFixture({});
     const ctx = createScanContext(fixture.root, new Set(['none']));
-    const metrics: Metric[] = [
-      { id: 'a', category: 'documentation', description: 'a', points: 10, check: () => true },
-    ];
+    const metrics: Metric[] = [metric({ id: 'a', category: 'documentation', points: 10, check: () => true })];
 
     const result = scoreRepo(ctx, metrics);
 
@@ -162,12 +169,25 @@ describe('scoreRepo', () => {
     fixture = createFixture({});
     const ctx = createScanContext(fixture.root, new Set(['none']));
     const metrics: Metric[] = [
-      { id: 'a', category: 'testing', description: 'a', points: 10, check: () => false },
-      { id: 'b', category: 'documentation', description: 'b', points: 10, check: () => false },
+      metric({ id: 'a', category: 'testing', points: 10, check: () => false }),
+      metric({ id: 'b', category: 'documentation', points: 10, check: () => false }),
     ];
 
     const result = scoreRepo(ctx, metrics);
 
     expect(result.topImprovements.map((m) => m.id)).toEqual(['b', 'a']);
+  });
+
+  it('carries remediation on each metric result', () => {
+    fixture = createFixture({});
+    const ctx = createScanContext(fixture.root, new Set(['none']));
+    const metrics: Metric[] = [
+      { ...metric({ id: 'a', category: 'documentation', points: 10, check: () => false }), remediation: 'Fix it by doing X.' },
+    ];
+
+    const result = scoreRepo(ctx, metrics);
+    const doc = result.categories.find((c) => c.category === 'documentation')!;
+
+    expect(doc.metrics[0].remediation).toBe('Fix it by doing X.');
   });
 });
