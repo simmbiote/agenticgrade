@@ -1,25 +1,29 @@
-# agenticgrade
+# AgenticGrade
 
-Scans a repository and scores its agentic-coding readiness — whether the repo has
-what an AI coding agent needs to work well unaided — across six categories:
-Documentation, Architecture, Testing, Automation Guard Rails, AI Context, and
-Maintainability.
-
-The scan also detects which agentic-tooling provider convention a repo uses
-(`openspec`, `claude`, a generic `AGENTS.md`-based `universal` setup, or `none`)
-and applies provider-specific bonus metrics on top of the base catalog.
+Scans a repository and scores its agentic-coding readiness — whether the repo has what an AI coding agent needs to work well unaided — across six categories:
+- Documentation, 
+- Architecture, 
+- Testing, 
+- Automation Guard Rails, 
+- AI Context, and
+- Maintainability.
 
 See [docs/METRICS.md](docs/METRICS.md) for the full metric reference — every metric's
 description, fix instruction, and remediation explanation in one table.
 
-## Setup
+## Grade your codebase
+Use `agenticgrade` on any codebase without installing it as a dependency.  Paste this at the root of your project. 
 
 ```bash
-npm install
-npm run build
-```
+npx agenticgrade scan . --detailed --html
+``` 
 
-## Run
+## Providers
+The scan also detects which agentic-tooling provider convention a repo uses
+(`openspec`, `claude`, a generic `AGENTS.md`-based `universal` setup, or `none`) and applies provider-specific bonus metrics on top of the base catalog. 
+
+
+## Command list
 
 ```bash
 npx agenticgrade scan [path]             # human-readable report, defaults to the current directory
@@ -55,6 +59,15 @@ npx agenticgrade scan [path] --json --output report.json   # writes the JSON rep
 `--html` renders the scan as a self-contained HTML document (inline styles, no external assets) — handy for sharing or printing as a PDF via your browser's print dialog. Its section order is Overall → Top Improvements → providers → categories (unlike the terminal report, an HTML/PDF document has no scrollback problem, so the summary stays at the top).
 
 `--output <path>` redirects `--html` or `--json` output to a file (creating any missing parent directories) instead of opening a browser or printing to stdout, and prints a confirmation naming the file. If both `--html` and `--json` are passed, `--html` takes precedence and `--output` writes the HTML. `--output` has no effect unless `--html` or `--json` is also passed.
+
+## Developing 
+
+### Setup
+
+```bash
+npm install
+npm run build
+```
 
 During development, run directly against source without building:
 
