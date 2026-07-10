@@ -1,10 +1,10 @@
 # AgenticGrade
 
 Scans a repository and scores its agentic-coding readiness — whether the repo has what an AI coding agent needs to work well unaided — across six categories:
-- Documentation, 
-- Architecture, 
-- Testing, 
-- Automation Guard Rails, 
+- Documentation,
+- Architecture,
+- Testing,
+- Automation Guard Rails,
 - AI Context, and
 - Maintainability.
 
@@ -12,7 +12,7 @@ See [docs/METRICS.md](docs/METRICS.md) for the full metric reference — every m
 description, fix instruction, and remediation explanation in one table.
 
 ## Grade your codebase
-Use `agenticgrade` on any codebase without installing it as a dependency.  Paste this at the root of your project. 
+Use `agenticgrade` on any codebase without installing it as a dependency.  Run this from the root of your project: 
 
 ```bash
 npx agenticgrade scan . --detailed --html
